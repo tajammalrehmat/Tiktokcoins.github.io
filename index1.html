@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ur">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TikTok Coins</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --card:#ffffff; --accent:#ff385c; --muted:#9b9b9b; --coin:#ffdf7a;
+    --shadow: 0 6px 18px rgba(0,0,0,0.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;background:var(--bg);color:#121212}
+  header{padding:16px;text-align:center;font-weight:700;font-size:20px}
+  .wrap{max-width:420px;margin:0 auto;padding:12px 12px 140px} /* extra padding bottom */
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.03);margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;direction:ltr;}
+  .opt{background:#fff;border-radius:10px;padding:10px;text-align:center;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+  .opt .num{font-weight:800;margin-bottom:6px}
+  .opt .price{font-size:13px;color:var(--muted)}
+  .opt.selected{border-color:rgba(255,56,92,0.16);box-shadow:var(--shadow)}
+  .note{font-size:12px;color:#666;margin-top:12px}
+  .rechargeBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:var(--accent);color:#fff;border:none;padding:14px 18px;border-radius:12px;font-weight:800;width:92%;max-width:420px;box-shadow:var(--shadow);cursor:pointer}
+  .usernameRow{display:flex;flex-direction:column;margin-bottom:12px}
+  .usernameRow label{font-size:14px;font-weight:600;margin-bottom:6px}
+  .usernameRow input{padding:10px;border-radius:8px;border:1px solid #ddd;font-size:15px}
+
+  /* Payment methods */
+  .paymentMethod{display:flex;align-items:center;gap:10px;padding:10px;border:2px solid transparent;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:.2s}
+  .paymentMethod:hover{background:#fafafa}
+  .paymentMethod img{width:36px;height:36px;object-fit:contain}
+  .paymentMethod span{font-weight:600;font-size:15px}
+  .paymentMethod.selected{border-color:rgba(255,56,92,0.16);box-shadow:var(--shadow)}
+
+  @media (max-width:420px){ .wrap{padding:10px 10px 140px;} }
+</style>
+</head>
+<body>
+  <header>TikTok Coins</header>
+
+  <div class="wrap">
+    <!-- Username input row -->
+    <div class="card">
+      <div class="usernameRow">
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Enter username..." />
+      </div>
+    </div>
+
+    <!-- Recharge grid card -->
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:8px">Recharge</div>
+      <div class="grid" id="optionsGrid"></div>
+    </div>
+
+    <!-- Payment methods card -->
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:8px">Saved Payment Methods</div>
+
+      <!-- PayPal -->
+      <div class="paymentMethod" onclick="selectPayment(this,'PayPal')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" />
+        <span>PayPal</span>
+      </div>
+
+      <!-- MasterCard + Visa in one row -->
+      <div style="display:flex; gap:10px;">
+        <div class="paymentMethod" style="flex:1;" onclick="selectPayment(this,'MasterCard')">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MasterCard" />
+          <span>MasterCard</span>
+        </div>
+        <div class="paymentMethod" style="flex:1;" onclick="selectPayment(this,'Visa')">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" />
+          <span>Visa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">By tapping "Recharge" to make a purchase, you acknowledge that you are purchasing a limited licence to...</div>
+  </div>
+
+  <button class="rechargeBtn" id="rechargeBtn">Recharge</button>
+
+<script>
+  const options = [
+    {coins:5, price:"$ 0.07"},
+    {coins:70, price:"$ 1.00"},
+    {coins:350, price:"$ 5.00"},
+    {coins:700, price:"$ 10.00"},
+    {coins:1400, price:"$ 20.00"},
+    {coins:3500, price:"$ 50.00"},
+    {coins:7000, price:"$ 100.00"},
+    {coins:17500, price:"$ 250.00"}
+  ];
+
+  const grid = document.getElementById('optionsGrid');
+  let selected = 0;
+  let selectedPayment = null;
+
+  function renderOptions(){
+    grid.innerHTML = '';
+    options.forEach((o, idx) => {
+      const d = document.createElement('div');
+      d.className = 'opt' + (idx===selected ? ' selected' : '');
+      d.innerHTML = `<div class="num">${o.coins} <span style="font-size:12px;opacity:.8">🪙</span></div>
+                     <div class="price">${o.price}</div>`;
+      d.onclick = () => { selected = idx; renderOptions(); };
+      grid.appendChild(d);
+    });
+  }
+  renderOptions();
+
+  function selectPayment(el, method){
+    document.querySelectorAll('.paymentMethod').forEach(pm => pm.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedPayment = method;
+  }
+
+  document.getElementById('rechargeBtn').addEventListener('click', () => {
+    const sel = options[selected];
+    const username = document.getElementById('username').value.trim();
+    if(!username){ return; }
+    if(!selectedPayment){ return; }
+
+    // Show processing state
+    const btn = document.getElementById('rechargeBtn');
+    btn.disabled = true;
+    btn.textContent = "Processing…";
+
+    setTimeout(() => {
+      // Redirect to success page with query params
+      window.location.href = `success.html?username=${encodeURIComponent(username)}&coins=${sel.coins}&price=${encodeURIComponent(sel.price)}&payment=${encodeURIComponent(selectedPayment)}`;
+    }, 2000);
+  });
+</script>
+</body>
+</html>
